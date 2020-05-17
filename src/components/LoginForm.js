@@ -7,8 +7,10 @@ export default function LoginForm() {
   const [message, setMessage] = useState("");
   const [user, setUser] = useState(null);
   const userRef = useRef(firestore.collection("users")).current;
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     const authUnsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+      setLoading(true);
       if (!!firebaseUser) {
         userRef.doc(firebaseUser.uid).onSnapshot((doc) => {
           if (doc.data()) {
@@ -21,6 +23,7 @@ export default function LoginForm() {
               role: doc.data().role,
             };
             setUser(userData);
+            setLoading(false);
           }
           clearForm();
         });
@@ -34,24 +37,15 @@ export default function LoginForm() {
   }, [userRef]);
   const onEmailLogin = (e) => {
     e.preventDefault();
+    setLoading(true);
     auth
       .signInWithEmailAndPassword(email, password)
-      .then(async (result) => {
-        if (result) {
-          const user = await firestore.doc(`users/${result.user.uid}`);
-          const currentUser = {
-            uid: user.uid,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-            email: user.email,
-            created: user.created,
-            role: user.role,
-          };
-          setUser(currentUser);
-        }
+      .then((result) => {
+        setLoading(false);
       })
       .catch((err) => {
-        console.log(err);
+        setMessage(err.code);
+        setLoading(false);
       });
   };
   const onEmailSignUp = (e) => {
@@ -60,8 +54,7 @@ export default function LoginForm() {
       .createUserWithEmailAndPassword(email, password)
       .then(async (result) => {
         setMessage("ลงทะเบียนเรียบร้อย");
-        setRegisterMode(false);
-        if (result) {
+        if (!!result) {
           const userRef = firestore.collection("users").doc(result.user.uid);
           const doc = await userRef.get();
           if (!doc.data()) {
@@ -83,7 +76,7 @@ export default function LoginForm() {
         clearForm();
       })
       .catch((err) => {
-        console.log(err);
+        setMessage(err.code);
       });
   };
   const changeModeHandler = (e) => {
@@ -95,19 +88,53 @@ export default function LoginForm() {
     setPassword("");
     setMessage("");
   };
+  const signOutHandler = () => {
+    auth
+      .signOut()
+      .then(() => {
+        setMessage("Logout Success");
+      })
+      .catch((err) => {
+        setMessage(err.code);
+      });
+  };
   if (!!user) {
     return (
       <div className="container-fluid">
-        <div className="row">
+        {loading ? (
+          <div className="row">
+            <div className="col-sm-4 mx-auto d-flex justify-content-center">
+              <div className="spinner-grow text-danger m-1" role="status">
+                <span className="sr-only">Loading...</span>
+              </div>
+              <div className="spinner-grow text-warning m-1" role="status">
+                <span className="sr-only">Loading...</span>
+              </div>
+              <div className="spinner-grow text-info m-1" role="status">
+                <span className="sr-only">Loading...</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="row mt-1">
+            <div className="col-sm-10 mx-auto text-center">
+              <div className="display-4 mt-3">สวัสดี: {user.displayName}</div>
+              <img
+                className="rounded float-center mt-2 border rounded"
+                src={user.photoURL}
+                alt="user"
+                width="30%"
+                style={{ maxHeight: "300" }}
+              />
+            </div>
+          </div>
+        )}
+        <div className="row mt-1">
           <div className="col-sm-10 mx-auto text-center">
-            <div className="display-4 mt-3">สวัสดี: {user.displayName}</div>
-            <img
-              className="rounded float-center"
-              src={user.photoURL}
-              alt="user"
-              width="30%"
-              style={{ maxHeight: "300" }}
-            />
+            <hr />
+            <button className="btn btn-info" onClick={signOutHandler}>
+              Logout
+            </button>
           </div>
         </div>
       </div>
@@ -118,7 +145,7 @@ export default function LoginForm() {
       {message !== "" ? (
         <div className="row">
           <div className="col-sm-6 mx-auto text-center">
-            <div className="alert-success p-2">{message}</div>
+            <div className="alert-warning p-2">{message}</div>
           </div>
         </div>
       ) : null}
@@ -137,6 +164,7 @@ export default function LoginForm() {
               name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onFocus={() => setMessage("")}
             />
             <div className="invalid-feedback"></div>
           </div>
@@ -148,6 +176,7 @@ export default function LoginForm() {
               name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onFocus={() => setMessage("")}
             />
             <div className="invalid-feedback"></div>
           </div>
