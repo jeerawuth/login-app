@@ -1,40 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
-import { auth, firestore } from "../database/firebase";
+import React, { useState, useContext } from "react";
+import { auth, firestore, onLogout } from "../database/firebase";
+import UsersContext from "../providers/UsersProvider";
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [registerMode, setRegisterMode] = useState(false);
   const [message, setMessage] = useState("");
-  const [user, setUser] = useState(null);
-  const userRef = useRef(firestore.collection("users")).current;
+  const user = useContext(UsersContext);
   const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    const authUnsubscribe = auth.onAuthStateChanged((firebaseUser) => {
-      setLoading(true);
-      if (!!firebaseUser) {
-        userRef.doc(firebaseUser.uid).onSnapshot((doc) => {
-          if (doc.data()) {
-            const userData = {
-              uid: doc.data().uid,
-              displayName: doc.data().displayName,
-              photoURL: doc.data().photoURL,
-              email: doc.data().email,
-              created: doc.data().created,
-              role: doc.data().role,
-            };
-            setUser(userData);
-            setLoading(false);
-          }
-          clearForm();
-        });
-      } else {
-        setUser(null);
-      }
-    });
-    return () => {
-      authUnsubscribe();
-    };
-  }, [userRef]);
+
   const onEmailLogin = (e) => {
     e.preventDefault();
     setLoading(true);
@@ -88,16 +62,6 @@ export default function LoginForm() {
     setPassword("");
     setMessage("");
   };
-  const signOutHandler = () => {
-    auth
-      .signOut()
-      .then(() => {
-        setMessage("Logout Success");
-      })
-      .catch((err) => {
-        setMessage(err.code);
-      });
-  };
   if (!!user) {
     return (
       <div className="container-fluid">
@@ -132,7 +96,7 @@ export default function LoginForm() {
         <div className="row mt-1">
           <div className="col-sm-10 mx-auto text-center">
             <hr />
-            <button className="btn btn-info" onClick={signOutHandler}>
+            <button className="btn btn-info" onClick={onLogout}>
               Logout
             </button>
           </div>
