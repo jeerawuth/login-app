@@ -2,14 +2,14 @@ import firebase from "firebase/app";
 import "firebase/firestore";
 import "firebase/auth";
 const firebaseConfig = {
-  apiKey: "AIzaSyCaw6OnO0_x0RuEf1TCf-Y6FpvrUn-0bw0",
-  authDomain: "logz-app.firebaseapp.com",
-  databaseURL: "https://logz-app.firebaseio.com",
-  projectId: "logz-app",
-  storageBucket: "logz-app.appspot.com",
-  messagingSenderId: "1056586730657",
-  appId: "1:1056586730657:web:3a1036e6c184467d9bb4e0",
-  measurementId: "G-1KBG4F3GNW",
+  apiKey: "AIzaSyCSu4XGfVrDYGZ7dRPKTsY_HIaYUq0Zn44",
+  authDomain: "test-refz.firebaseapp.com",
+  databaseURL: "https://test-refz.firebaseio.com",
+  projectId: "test-refz",
+  storageBucket: "test-refz.appspot.com",
+  messagingSenderId: "609081493503",
+  appId: "1:609081493503:web:56a51fb80171545bd189ca",
+  measurementId: "G-VQC1YR66X7",
 };
 const firebaseApp = firebase.initializeApp(firebaseConfig);
 export const firestore = firebaseApp.firestore();
